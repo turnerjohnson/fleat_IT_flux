@@ -22,11 +22,40 @@ function h = psecline_mooring(structure, var1, cont1, ztype, zmax, cfg, tidx)
 %   PSECTIME_MOORING. Worth factoring out into their own files eventually.
 
 %% ---- arguments ------------------------------------------------------
+% var1 is not optional. Called as psecline_mooring(M1) MATLAB raises "Not
+% enough input arguments" from whichever line touches var1 first, which names
+% neither the argument nor the fact that a mooring struct has no default
+% variable to draw.
+if nargin < 2 || isempty(var1)
+    error('psecline_mooring:novar', ...
+        ['var1 is required: which field to draw, e.g. ' ...
+         'psecline_mooring(%s, ''T''). Available: %s'], ...
+         argname(inputname(1)), strjoin(fieldnames(structure)', ', '));
+end
 if nargin < 3, cont1  = []; end
 if nargin < 4 || isempty(ztype), ztype = 'depth'; end
 if nargin < 5, zmax = []; end
 if nargin < 6 || isempty(cfg), cfg = struct(); end
 if nargin < 7, tidx = []; end
+
+% zmax IS A SCALAR MAX DEPTH. Validated because the mistake is silent: a
+% two-element [zmin zmax] makes the comparison below expand into an
+% [nsens x 2] mask, every row is dropped, and the autoset further down then
+% reports "all NaN or constant" about a field that was perfectly fine.
+%
+% The way this actually happens is worse than a typo. A caller writing
+%     psecline_mooring(..., 'depth', zlim, cfg, tidx)
+% in a script that never assigns zlim gets MATLAB's BUILT-IN zlim(), which
+% returns the current axes' z-limits, i.e. [0 1] -- a valid-looking pair of
+% numbers that silently cuts every sensor, since nothing is shallower than 1 m.
+if ~isempty(zmax) && (~isnumeric(zmax) || ~isscalar(zmax))
+    error('psecline_mooring:zmax', ...
+        ['zmax is a single max depth in metres, e.g. 300, or [] for no cut. ' ...
+         'Got %s.\nIf that looks like a pair of axis limits, check the ' ...
+         'variable you passed is assigned -- an unassigned "zlim" resolves to ' ...
+         'MATLAB''s built-in zlim() and returns the current axes'' z-limits.'], ...
+         mat2str(zmax));
+end
 
 
 if isfield(cfg,'mooring') && ~isempty(cfg.mooring)
@@ -59,7 +88,45 @@ t1 = pick_time(structure, size(V1,2), var1);
 
 
 
+if ~isfield(structure, 'depth')
+    error('psecline_mooring:nodepth', ...
+        ['This struct has no .depth, and this function draws each sensor at ' ...
+         'its own depth, so there is nothing to draw against. Available: %s\n' ...
+         'For the DOD instrument records, depth comes from the measured ' ...
+         'pressure:\n    %s.depth = sw_dpth(PSdbar.'', %.4g);'], ...
+         strjoin(fieldnames(structure)', ', '), mname, lat);
+end
 D  = structure.depth;
+
+% .depth IS [nsens x ntime], NOT the depth grid -- same guard as
+% PSECTIME_MOORING; see the comment there for why a vector gets expanded
+% rather than rejected.
+if isvector(D) && ~isscalar(D)
+    if numel(D) == size(V1,1)
+        D = repmat(D(:), 1, numel(t1));
+    elseif numel(D) == numel(t1)
+        error('psecline_mooring:depthvector', ...
+            ['.depth is a %s vector matching the TIME length (%d), not the ' ...
+             'sensor count (%d). That is a time series of one depth, not a ' ...
+             'mooring section. Expected [nsens x ntime].'], ...
+             mat2str(size(D)), numel(t1), size(V1,1));
+    else
+        error('psecline_mooring:depthvector', ...
+            ['.depth is a %s vector matching neither the sensor count of ' ...
+             '''%s'' (%d) nor the time length (%d). Expected [nsens x ntime] ' ...
+             '-- for a fixed depth grid z, pass repmat(z(:), 1, numel(time)).'], ...
+             mat2str(size(D)), var1, size(V1,1), numel(t1));
+    end
+end
+if size(D,1) ~= size(V1,1)
+    error('psecline_mooring:depthrows', ...
+        ['.depth has %d rows but ''%s'' has %d. They index the same sensors, ' ...
+         'so these must match. A struct holding BOTH a gridded product and ' ...
+         'the raw instruments will trip this -- they are two different ' ...
+         'moorings as far as this function is concerned, and want two ' ...
+         'structs.'], size(D,1), var1, size(V1,1));
+end
+
 tD = pick_time(structure, size(D,2), 'depth');
 if numel(tD) ~= numel(t1) || any(abs(tD(:)-t1(:)) > 1e-9)
     D = interp1(tD(:), D.', t1(:)).';
@@ -95,7 +162,14 @@ switch ztype
     Y = D;
     ylab = '$z$ (m)';
     if ~isempty(zmax)
-        keep = mean(D,2,'omitnan') <= zmax;
+        zbar = mean(D,2,'omitnan');
+        keep = zbar <= zmax;
+        if ~any(keep)
+            error('psecline_mooring:zmaxempty', ...
+                ['zmax = %g m keeps no sensors: the shallowest has a mean ' ...
+                 'depth of %.0f m and the deepest %.0f m.'], ...
+                 zmax, min(zbar), max(zbar));
+        end
         Y = Y(keep,:); V1 = V1(keep,:);
     end
 
@@ -129,7 +203,13 @@ switch ztype
     V1 = V1s;  Y = Zs; 
     ylab = '$z$ of isopycnal (m)';
     if ~isempty(zmax)
-        keep = mean(Zs,2,'omitnan') <= zmax;
+        zbar = mean(Zs,2,'omitnan');
+        keep = zbar <= zmax;
+        if ~any(keep)
+            error('psecline_mooring:zmaxempty', ...
+                ['zmax = %g m keeps no density surfaces: their mean depths ' ...
+                 'run %.0f to %.0f m.'], zmax, min(zbar), max(zbar));
+        end
         Y = Y(keep,:); V1 = V1(keep,:);
     end
     fprintf('psecline_mooring: sigma mode -- one line per isopycnal, y = its depth.\n');
@@ -228,6 +308,8 @@ switch lower(v)
   case 'spd',   lab = 'speed (m s$^{-1}$)';             cmap = 'speed';
   case 'u',     lab = '$u$ (m s$^{-1}$)';               cmap = 'balance'; is_div = true;
   case 'v',     lab = '$v$ (m s$^{-1}$)';               cmap = 'balance'; is_div = true;
+  case 'upar',  lab = '$u_\parallel$ (m s$^{-1}$)';     cmap = 'balance'; is_div = true;
+  case 'uperp', lab = '$u_\perp$ (m s$^{-1}$)';         cmap = 'balance'; is_div = true;
   case {'chi','chissf','chi_nomask'}
                 lab = '$\chi$ ($^\circ$C$^2$ s$^{-1}$)'; cmap = 'matter'; is_log = true;
   case {'eps','epsssf','eps_nomask'}
@@ -239,4 +321,10 @@ switch lower(v)
     lab = strrep(v,'_','\_');  cmap = 'thermal';
     warning('psecline_mooring:unknownvar','No style entry for ''%s''.', v);
 end
+end
+
+function n = argname(n)
+% inputname is empty when the caller passed an expression rather than a
+% variable; the message still has to read as something runnable.
+if isempty(n), n = 'mooring'; end
 end

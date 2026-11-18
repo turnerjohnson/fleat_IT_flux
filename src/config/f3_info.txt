@@ -1,0 +1,230 @@
+==============================================================================
+ FLEAT MOORING F3  --  INSTRUMENTS, NOMINAL DEPTHS AND RECORD
+==============================================================================
+
+ Position         008 32.723' N, 134 37.414' E    (8.5454 N, 134.6236 E)
+ Setting          between F2 and F4, eastern cluster
+ Bottom depth     1666 m
+ Instrumented     63 to 1633 m   (39 levels in the gridded product)
+ Time grid        2016-06-05 to 2017-04-13   (45072 samples at 10 min,
+                  7512 hourly)
+ Deployment       2016-06-05 to 2017-04-13   (313 days of pressure)
+ Velocity         2016-06-05 to 2017-04-13   (313 days, any sensor)
+ Config window    whole record (cfg.t_end not set)
+ Knockdown        depth range per sensor: median 125 m, max 150 m
+
+------------------------------------------------------------------------------
+ 1.  RECORD AND DURATION, BY CHANNEL
+------------------------------------------------------------------------------
+
+  Common 10-minute time grid: 2016-06-05 to 2017-04-13, 45072 samples.
+  Coverage below is a fraction of that grid, so a mooring deployed late
+  cannot reach 100%.
+
+  ALL  = window in which EVERY sensor reports. ANY = window in which at
+  least one does. The two differ exactly where something failed.
+
+          coverage %, by sensor      ALL sensors         ANY sensor
+    chan   min    med    max   n=0   (YY-MM-DD)          (YY-MM-DD)
+    ----------------------------------------------------------------------
+    depth 100.0  100.0  100.0    0   16-06-05..17-04-13  16-06-05..17-04-13
+    T     100.0  100.0  100.0    0   16-06-05..17-04-13  16-06-05..17-04-13
+    S       0.0  100.0  100.0    2   16-06-05..17-04-13  16-06-05..17-04-13
+    u      10.2  100.0  100.0    0   16-06-06..17-04-13  16-06-05..17-04-13
+    v      10.2  100.0  100.0    0   16-06-06..17-04-13  16-06-05..17-04-13
+
+------------------------------------------------------------------------------
+ 2.  INSTRUMENT FAILURES
+------------------------------------------------------------------------------
+
+  NO FAILURES IN THE GRIDDED PRODUCT. All 39 rows return 100% depth and 100%
+  temperature from 2016-06-05 to 2017-04-13. F3 is the cleanest record in the
+  array and the natural control for F1 and F4.
+
+  Three thermistors never made it into the product because they did not
+  record at all -- 72212 (138 m), 72073 (278 m) and 72197 (1589 m) -- and one
+  ADCP, 2625 at 1559 m, likewise. Those are pre-processing losses, not mid-
+  record failures: nothing drops out partway through.
+
+  The declining deep velocity coverage (98.8% at 1603 m down to 10.2% at 1633
+  m) is ADCP range and side-lobe loss at the last few bins above the anchor,
+  present from the first day. It is not a failure and it is not a reason to
+  shorten the record; it is a reason not to trust the bottom four velocity
+  levels.
+
+  TWO ROWS ARE THE SAME INSTRUMENT. Rows 1 and 2 both carry SN 72206 at an
+  identical mean depth of 62.5 m and identical coverage. One of them is a
+  duplicate introduced in gridding. Fitting modes to both double-weights that
+  level.
+
+------------------------------------------------------------------------------
+ 3.  GRIDDED SENSOR TABLE  (measured from F3_fullfield.mat)
+------------------------------------------------------------------------------
+
+  z_nom  is the deployment-sheet depth for that serial number (section 4).
+  z_obs  is the mean of the recorded pressure-derived depth.
+  Coverage is percent of the common grid. 'ends' is the last good
+  sample of u; a date earlier than the record end is a failure.
+
+    #  type       SN      z_nom  z_obs    dz    T%    S%    u%  u ends
+    ----------------------------------------------------------------------
+     1 RBR Solo   72206     68.0   62.5  -5.5 100.0  81.1  99.5  2017-04-13
+     2 RBR Solo   72206     68.0   62.5  -5.5 100.0  81.1  99.5  2017-04-13
+     3 RBR Solo   72207     78.0   72.5  -5.5 100.0  99.8  99.5  2017-04-13
+     4 RBR Solo   72208     88.0   82.5  -5.5 100.0 100.0  99.6  2017-04-13
+     5 RBR Solo   72209     98.0   92.4  -5.6 100.0 100.0  99.9  2017-04-13
+     6 RBR Solo   72210    118.0  112.3  -5.7 100.0 100.0 100.0  2017-04-13
+     7 RBR Solo   72211    128.0  122.3  -5.7 100.0 100.0 100.0  2017-04-13
+     8 RBR Solo   72213    148.0  142.2  -5.8 100.0 100.0 100.0  2017-04-13
+     9 RBR Solo   72214    168.0  162.1  -5.9 100.0 100.0 100.0  2017-04-13
+    10 RBR Solo   72215    178.0  172.1  -5.9 100.0 100.0 100.0  2017-04-13
+    11 RBR Solo   72216    188.0  182.0  -6.0 100.0 100.0 100.0  2017-04-13
+    12 RBR Solo   72217    198.0  192.0  -6.0 100.0 100.0 100.0  2017-04-13
+    13 RBR Solo   72218    218.0  211.9  -6.1 100.0 100.0 100.0  2017-04-13
+    14 RBR Solo   72219    228.0  221.8  -6.2 100.0 100.0 100.0  2017-04-13
+    15 RBR Solo   72072    238.0  231.8  -6.2 100.0 100.0 100.0  2017-04-13
+    16 Chi-POD    601          -  234.8     - 100.0 100.0 100.0  2017-04-13
+    17 RBR Solo   72074    318.0  311.4  -6.6 100.0 100.0 100.0  2017-04-13
+    18 RBR Solo   72075    338.0  331.3  -6.7 100.0 100.0 100.0  2017-04-13
+    19 RBR Solo   72076    358.0  351.2  -6.8 100.0 100.0 100.0  2017-04-13
+    20 RBR Solo   72077    378.0  371.1  -6.9 100.0 100.0 100.0  2017-04-13
+    21 RBR Solo   72078    398.0  391.0  -7.0 100.0 100.0 100.0  2017-04-13
+    22 RBR Solo   72079    488.0  480.6  -7.4 100.0 100.0 100.0  2017-04-13
+    23 RBR Solo   72080    588.0  580.1  -7.9 100.0 100.0 100.0  2017-04-13
+    24 RBR Solo   72081    688.0  679.6  -8.4 100.0 100.0 100.0  2017-04-13
+    25 RBR Solo   72082    835.0  825.7  -9.3 100.0 100.0 100.0  2017-04-13
+    26 RBR Solo   72083    935.0  925.0 -10.0 100.0 100.0 100.0  2017-04-13
+    27 RBR Solo   72084   1035.0 1024.2 -10.8 100.0 100.0 100.0  2017-04-13
+    28 RBR Solo   72085   1135.0 1123.4 -11.6 100.0 100.0 100.0  2017-04-13
+    29 RBR Solo   72086   1235.0 1222.7 -12.3 100.0 100.0 100.0  2017-04-13
+    30 RBR Solo   72087   1335.0 1321.9 -13.1 100.0 100.0 100.0  2017-04-13
+    31 RBR Solo   72104   1559.0 1544.0 -15.0 100.0 100.0 100.0  2017-04-13
+    32 RBR Solo   72195   1569.0 1553.9 -15.1 100.0 100.0 100.0  2017-04-13
+    33 RBR Solo   72196   1579.0 1563.8 -15.2 100.0 100.0 100.0  2017-04-13
+    34 RBR Solo   72198   1599.0 1583.6 -15.4 100.0 100.0 100.0  2017-04-13
+    35 RBR Solo   72088   1609.0 1593.5 -15.5 100.0 100.0 100.0  2017-04-13
+    36 RBR Solo   72089   1619.0 1603.4 -15.6 100.0 100.0  98.8  2017-04-13
+    37 RBR Solo   72090   1629.0 1613.3 -15.7 100.0 100.0  76.4  2017-04-13
+    38 RBR Solo   72091   1639.0 1623.2 -15.8 100.0   0.0  43.0  2017-04-13
+    39 RBR Solo   72105   1649.0 1633.2 -15.8 100.0   0.0  10.2  2017-04-13
+
+------------------------------------------------------------------------------
+ 4.  AS-DEPLOYED INSTRUMENT LIST  (deployment sheet)
+------------------------------------------------------------------------------
+
+  All 56 instruments logged on the deployment sheet, by type and nominal
+  depth. 'grid' marks the 37 that appear as rows in the gridded product;
+  'dead' marks those the original file flagged as not recording.
+
+    type        SN       z_nom   status   ('-' = no fixed depth)
+    --------------------------------------------------------
+    RBR Solo    72206      68.0   grid
+    RBR Solo    72207      78.0   grid
+    RBR Solo    72208      88.0   grid
+    RBR Solo    72209      98.0   grid
+    RBR Solo    72210     118.0   grid
+    RBR Solo    72211     128.0   grid
+    RBR Solo    72212     138.0   dead -- did not work
+    RBR Solo    72213     148.0   grid
+    RBR Solo    72214     168.0   grid
+    RBR Solo    72215     178.0   grid
+    RBR Solo    72216     188.0   grid
+    RBR Solo    72217     198.0   grid
+    RBR Solo    72218     218.0   grid
+    RBR Solo    72219     228.0   grid
+    RBR Solo    72072     238.0   grid
+    RBR Solo    72073     278.0   dead -- did not work
+    RBR Solo    72074     318.0   grid
+    RBR Solo    72075     338.0   grid
+    RBR Solo    72076     358.0   grid
+    RBR Solo    72077     378.0   grid
+    RBR Solo    72078     398.0   grid
+    RBR Solo    72079     488.0   grid
+    RBR Solo    72080     588.0   grid
+    RBR Solo    72081     688.0   grid
+    RBR Solo    72082     835.0   grid
+    RBR Solo    72083     935.0   grid
+    RBR Solo    72084    1035.0   grid
+    RBR Solo    72085    1135.0   grid
+    RBR Solo    72086    1235.0   grid
+    RBR Solo    72087    1335.0   grid
+    RBR Solo    72104    1559.0   grid
+    RBR Solo    72195    1569.0   grid
+    RBR Solo    72196    1579.0   grid
+    RBR Solo    72197    1589.0   dead -- did not work
+    RBR Solo    72198    1599.0   grid
+    RBR Solo    72088    1609.0   grid
+    RBR Solo    72089    1619.0   grid
+    RBR Solo    72090    1629.0   grid
+    RBR Solo    72091    1639.0   grid
+    RBR Solo    72105    1649.0   grid
+    RDI ADCP    17477      27.0   not in gridded product
+    RDI ADCP    15368      27.0   not in gridded product
+    RDI ADCP    04021     747.0   not in gridded product
+    RDI ADCP    2625     1559.0   dead -- didn't work
+    SBE 37      7667       48.0   not in gridded product
+    SBE 37      7810      257.0   not in gridded product
+    SBE 37      7812      735.0   not in gridded product
+    SBE 37      2431     1085.0   not in gridded product
+    SBE 37      10552    1419.0   not in gridded product
+    SBE 39      5868      108.0   not in gridded product
+    SBE 39      5869      158.0   not in gridded product
+    SBE 39      5870      208.0   not in gridded product
+    SBE 39      5871      298.0   not in gridded product
+    SBE 39      5872      438.0   not in gridded product
+    SBE 39      5873      538.0   not in gridded product
+    SBE 39      1100      740.0   not in gridded product
+
+  THE GRIDDED PRODUCT IS NOT THE MOORING. Only the RBR Solos and the Chi-PODs
+  appear as rows in F3_fullfield.mat. Every SBE 37, SBE 39, SBE 56 and ADCP
+  on the wire was used to BUILD that product -- their pressure fixes the
+  depth interpolation, their conductivity is the source of S, the ADCPs are
+  the source of u and v -- but none of them is a separate level you can fit
+  to. So the 39 levels in section 3 are the vertical resolution available to
+  the mode fit, not the 56 instruments in this list.
+
+------------------------------------------------------------------------------
+ 5.  AS-DEPLOYED WIRE TABLE
+------------------------------------------------------------------------------
+
+  NOT REPRODUCED. The archived original of this file carries a wire table
+  headed "F2" whose serial numbers are F2's from top to bottom: it is a copy
+  of the F2 table, not F3's. Reproducing it here would put F2's instruments
+  on F3's wire. F3's own table has to come off the deployment sheet. See
+  original_info/f3_info.txt.
+
+------------------------------------------------------------------------------
+ 6.  NOTES AND OPEN QUESTIONS
+------------------------------------------------------------------------------
+
+  MEAN OBSERVED DEPTHS RUN 6 to 15 m SHALLOWER THAN NOMINAL, growing with
+  depth: -5.5 m at the top sensor, -15.8 m at the deepest. That is a wire
+  length or lay-back correction, not noise, and it is monotonic.
+
+  KNOCKDOWN IS THE SECOND LARGEST IN THE ARRAY: per-sensor depth range median
+  124.6 m, max 149.6 m, against 56 m at F2.
+
+  THE AS-DEPLOYED WIRE TABLE IS MISSING. The archived original of this file
+  carries a wire table headed "F2" whose serial numbers are F2's throughout
+  -- it is a copy-paste of the F2 table, not F3's. It has been left out here
+  rather than reproduced wrongly. F3's own wire table has to come off the
+  deployment sheet.
+
+  F3 IS THE CONTROL. It is the only mooring with a full-length, failure-free
+  record at full coverage, so it is the one to check pipeline behaviour
+  against before trusting F1 or F4.
+
+------------------------------------------------------------------------------
+ 7.  PROVENANCE
+------------------------------------------------------------------------------
+
+  T, S and z from Anna Simpson; u and v from Conrad Luecke. Section 3 is
+  measured from F3_fullfield.mat and is reproducible; sections 4 and 5 are
+  transcribed from the deployment sheet and are not. The original,
+  unformatted version of this file is kept verbatim at
+  original_info/f3_info.txt.
+
+==============================================================================
+ Reformatted 2026-10-29. Sections 1-3 are measured from the data; 4-5 are
+ transcribed; 6 is interpretation. Original kept at original_info/.
+==============================================================================

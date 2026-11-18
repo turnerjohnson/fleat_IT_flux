@@ -1,0 +1,266 @@
+==============================================================================
+ FLEAT MOORING F1  --  INSTRUMENTS, NOMINAL DEPTHS AND RECORD
+==============================================================================
+
+ Position         008 40.838' N, 134 24.087' E    (8.6806 N, 134.4015 E)
+ Setting          northwestern mooring, furthest from the reef and the rest
+ Bottom depth     3390 m
+ Instrumented     97 to 3374 m   (29 levels in the gridded product)
+ Time grid        2016-06-05 to 2017-04-13   (45072 samples at 10 min,
+                  7512 hourly)
+ Deployment       2016-06-06 to 2016-12-10   (188 days of pressure)
+ Velocity         2016-06-05 to 2016-12-10   (189 days, any sensor)
+ Config window    cfg.t_end = 736675  (2016-12-11), set to the velocity
+                  failure
+ Knockdown        depth range per sensor: median 116 m, max 205 m
+
+------------------------------------------------------------------------------
+ 1.  RECORD AND DURATION, BY CHANNEL
+------------------------------------------------------------------------------
+
+  Common 10-minute time grid: 2016-06-05 to 2017-04-13, 45072 samples.
+  Coverage below is a fraction of that grid, so a mooring deployed late
+  cannot reach 100%.
+
+  ALL  = window in which EVERY sensor reports. ANY = window in which at
+  least one does. The two differ exactly where something failed.
+
+          coverage %, by sensor      ALL sensors         ANY sensor
+    chan   min    med    max   n=0   (YY-MM-DD)          (YY-MM-DD)
+    ----------------------------------------------------------------------
+    depth  13.9   60.0   60.0    0   16-09-03..16-10-16  16-06-06..16-12-10
+    T      13.9   99.7   99.7    0   16-09-03..16-10-16  16-06-06..17-04-13
+    S       0.0   60.3   60.3    2   16-06-07..16-12-10  16-06-05..16-12-10
+    u       0.0   60.3   60.3    2   16-06-05..16-12-10  16-06-05..16-12-10
+    v       0.0   60.3   60.3    2   16-06-05..16-12-10  16-06-05..16-12-10
+
+------------------------------------------------------------------------------
+ 2.  INSTRUMENT FAILURES
+------------------------------------------------------------------------------
+
+  ONE FAILURE, AND IT ENDS THE USABLE RECORD AT 188 OF 313 DAYS.
+
+  Every velocity and salinity channel on the mooring stops on 2016-12-10, and
+  the gridded pressure (depth) record stops with them. Temperature does not:
+  all 29 thermistors return 99.7% coverage through to 2017-04-13. So F1 has a
+  full-length T record sitting on top of a half-length u, v, S and z record,
+  and only the shorter one can carry a flux.
+
+  cfg.t_end = 736675 (2016-12-11) is set at that boundary. Running past it
+  does not fail loudly -- the fit simply has no velocity to fit -- which is
+  the same trap F4 sets.
+
+  SECOND, SMALLER FAILURE: sensor 5 (RBR 100327, nominal 164 m) loses both
+  depth and temperature on 2016-10-16, at 13.9% coverage. It is the only
+  thermistor on this mooring that dies early, and it is also the one whose
+  mean observed depth (160.4 m) sits ABOVE sensor 4's (161.0 m), i.e. the two
+  cross. Treat 100327 as suspect for the whole record, not just after
+  October.
+
+------------------------------------------------------------------------------
+ 3.  GRIDDED SENSOR TABLE  (measured from F1_fullfield.mat)
+------------------------------------------------------------------------------
+
+  z_nom  is the deployment-sheet depth for that serial number (section 4).
+  z_obs  is the mean of the recorded pressure-derived depth.
+  Coverage is percent of the common grid. 'ends' is the last good
+  sample of u; a date earlier than the record end is a failure.
+
+    #  type       SN      z_nom  z_obs    dz    T%    S%    u%  u ends
+    ----------------------------------------------------------------------
+     1 RBR Solo   100321    93.0   96.9   3.9  99.7   9.3  60.2  2016-12-10
+     2 RBR Solo   100322   103.0  106.9   3.9  99.7  36.8  60.2  2016-12-10
+     3 RBR Solo   100324   134.0  138.4   4.4  99.7  60.1  60.3  2016-12-10
+     4 RBR Solo   100326   154.0  161.0   7.0  99.7  60.3  60.3  2016-12-10
+     5 RBR Solo   100327   164.0  160.4  -3.6  13.9  60.3  60.3  2016-12-10
+     6 RBR Solo   100328   184.0  187.7   3.7  99.7  60.3  60.3  2016-12-10
+     7 RBR Solo   72142    194.0  197.8   3.8  99.7  60.3  60.3  2016-12-10
+     8 RBR Solo   72144    204.0  207.8   3.8  99.7  60.3  60.3  2016-12-10
+     9 RBR Solo   72145    214.0  217.9   3.9  99.7  60.3  60.3  2016-12-10
+    10 RBR Solo   72146    234.0  238.0   4.0  99.7  60.3  60.3  2016-12-10
+    11 RBR Solo   72147    244.0  248.1   4.1  99.7  60.3  60.3  2016-12-10
+    12 RBR Solo   72148    254.0  258.1   4.1  99.7  60.3  60.3  2016-12-10
+    13 RBR Solo   72149    264.0  268.2   4.2  99.7  60.3  60.3  2016-12-10
+    14 RBR Solo   72150    284.0  288.3   4.3  99.7  60.3  60.3  2016-12-10
+    15 RBR Solo   72151    294.0  298.3   4.3  99.7  60.3  60.3  2016-12-10
+    16 RBR Solo   72152    304.0  308.4   4.4  99.7  60.3  60.3  2016-12-10
+    17 RBR Solo   72153    314.0  318.4   4.4  99.7  60.3  60.3  2016-12-10
+    18 RBR Solo   72158    423.0  427.1   4.1  99.7  60.3  60.3  2016-12-10
+    19 RBR Solo   72159    524.0  527.3   3.3  99.7  60.3  60.3  2016-12-10
+    20 RBR Solo   72160    624.0  627.2   3.2  99.7  60.3  60.3  2016-12-10
+    21 RBR Solo   72161    724.0  727.2   3.2  99.7  60.3  60.3  2016-12-10
+    22 RBR Solo   72163    878.0  880.3   2.3  99.7  60.3  60.3  2016-12-10
+    23 RBR Solo   72164    978.0  980.2   2.2  99.7  60.2  60.3  2016-12-10
+    24 RBR Solo   72165   1078.0 1080.1   2.1  99.7  60.2  60.3  2016-12-10
+    25 RBR Solo   72166   1178.0 1180.0   2.0  99.7  60.2  60.3  2016-12-10
+    26 RBR Solo   72167   1278.0 1279.9   1.9  99.7  60.2  60.3  2016-12-10
+    27 RBR Solo   72162   1378.0 1379.8   1.8  99.7  60.2  60.2  2016-12-10
+    28 RBR Solo   72168   3362.0 3362.0   0.0  99.7   0.0   0.0  --
+    29 RBR Solo   72169   3374.0 3374.0   0.0  99.7   0.0   0.0  --
+
+------------------------------------------------------------------------------
+ 4.  AS-DEPLOYED INSTRUMENT LIST  (deployment sheet)
+------------------------------------------------------------------------------
+
+  All 53 instruments logged on the deployment sheet, by type and nominal
+  depth. 'grid' marks the 29 that appear as rows in the gridded product;
+  'dead' marks those the original file flagged as not recording.
+
+    type        SN       z_nom   status   ('-' = no fixed depth)
+    --------------------------------------------------------
+    McLane MP   MM01          -   dead -- returned no data
+    McLane MP   MM02          -   dead -- returned no data
+    RBR Solo    100321     93.0   grid
+    RBR Solo    100322    103.0   grid
+    RBR Solo    100323    113.0   dead -- did not record
+    RBR Solo    100324    134.0   grid
+    RBR Solo    100325    144.0   dead -- did not record
+    RBR Solo    100326    154.0   grid
+    RBR Solo    100327    164.0   grid
+    RBR Solo    100328    184.0   grid
+    RBR Solo    72142     194.0   grid
+    RBR Solo    72144     204.0   grid
+    RBR Solo    72145     214.0   grid
+    RBR Solo    72146     234.0   grid
+    RBR Solo    72147     244.0   grid
+    RBR Solo    72148     254.0   grid
+    RBR Solo    72149     264.0   grid
+    RBR Solo    72150     284.0   grid
+    RBR Solo    72151     294.0   grid
+    RBR Solo    72152     304.0   grid
+    RBR Solo    72153     314.0   grid
+    RBR Solo    72158     423.0   grid
+    RBR Solo    72159     524.0   grid
+    RBR Solo    72160     624.0   grid
+    RBR Solo    72161     724.0   grid
+    RBR Solo    72163     878.0   grid
+    RBR Solo    72164     978.0   grid
+    RBR Solo    72165    1078.0   grid
+    RBR Solo    72166    1178.0   grid
+    RBR Solo    72167    1278.0   grid
+    RBR Solo    72162    1378.0   grid
+    RBR Solo    72168    3362.0   grid
+    RBR Solo    72169    3374.0   grid
+    RDI ADCP    19226      65.0   not in gridded product
+    RDI ADCP    1426      133.0   not in gridded product
+    RDI ADCP    11181     793.0   not in gridded product
+    RDI ADCP    14255    1491.0   dead -- did not work
+    RDI ADCP    22525    2304.0   dead -- error
+    RDI ADCP    14408    3362.0   dead -- error
+    SBE 37      6935       83.0   not in gridded product
+    SBE 37      2530      373.0   not in gridded product
+    SBE 37      2533      787.0   not in gridded product
+    SBE 37      2429     1128.0   not in gridded product
+    SBE 37      10553    1480.0   not in gridded product
+    SBE 37      7776     2304.0   not in gridded product
+    SBE 39      6333      124.0   not in gridded product
+    SBE 39      6334      174.0   not in gridded product
+    SBE 39      1093      224.0   not in gridded product
+    SBE 39      1094      274.0   not in gridded product
+    SBE 39      3253      474.0   not in gridded product
+    SBE 39      1096      574.0   not in gridded product
+    SBE 39      3134     1495.0   not in gridded product
+    SBE 39      3254     2304.0   dead -- did not work
+
+  THE GRIDDED PRODUCT IS NOT THE MOORING. Only the RBR Solos and the Chi-PODs
+  appear as rows in F1_fullfield.mat. Every SBE 37, SBE 39, SBE 56 and ADCP
+  on the wire was used to BUILD that product -- their pressure fixes the
+  depth interpolation, their conductivity is the source of S, the ADCPs are
+  the source of u and v -- but none of them is a separate level you can fit
+  to. So the 29 levels in section 3 are the vertical resolution available to
+  the mode fit, not the 53 instruments in this list.
+
+------------------------------------------------------------------------------
+ 5.  AS-DEPLOYED WIRE TABLE
+------------------------------------------------------------------------------
+
+  Depth [m] is the deployment-sheet target. Compare with z_obs in
+  section 3, which is what the pressure sensors actually recorded.
+
+    section        type        SN       on wire   depth
+    --------------------------------------------------------
+    700m top       SBE37       6935     10        80
+    RBR            100321      20       90
+    RBR            100322      30       100
+    RBR            100323      40       110
+    SBE39          6333        50       120
+    RBR            100324      60       130
+    RBR            100325      70       140
+    RBR            100326      80       150
+    RBR            100327      90       160
+    SBE39          6334        100      170
+    RBR            100328      110      180
+    RBR            72142       120      190
+    RBR            72144       130      200
+    RBR            72145       140      210
+    SBE39          1093        150      220
+    RBR            72146       160      230
+    RBR            72147       170      240
+    RBR            72148       180      250
+    RBR            72149       190      260
+    SBE39          1094        200      270
+    RBR            72150       210      280
+    RBR            72151       220      290
+    RBR            72152       230      300
+    RBR            72153       240      310
+    SBE37          2530        300      370
+    RBR            72158       350      420
+    SBE39 w/p      3253        400      470
+    RBR            72159       450      520
+    SBE39          1096        500      570
+    RBR            72160       550      620
+    RBR            72161       650      720
+    (wire end / next section top at 785 m)
+    700m bottom    RBR         72163    100       885
+    RBR            72164       200      985
+    RBR            72165       300      1085
+    SBE37          2429        350      1135
+    RBR            72166       400      1185
+    RBR            72167       500      1285
+    RBR            72162       600      1385
+
+------------------------------------------------------------------------------
+ 6.  NOTES AND OPEN QUESTIONS
+------------------------------------------------------------------------------
+
+  BOTH McLANE PROFILERS RETURNED NO DATA. MM01 and MM02 are commented out of
+  the deployment list, and that is why: they recorded nothing. They were the
+  only instruments that would have sampled the 1380-3360 m gap, so their loss
+  is what turns that gap from a sparse region into an empty one. Nothing else
+  on the mooring can fill it -- the three deep instruments that might have
+  helped also failed (ADCP 14255 at 1491 m, ADCP 22525 at 2304 m, SBE39 3254
+  at 2304 m), and the two that did record below 1380 m sit on the anchor at
+  3362 and 3374 m with temperature only.
+
+  F1 IS INSTRUMENTED TO 1380 m IN 3390 m OF WATER. The deepest wire
+  thermistor is 72162 at a nominal 1378 m, and the only two instruments below
+  it (72168, 72169) sit on the anchor at 3362 and 3374 m with temperature
+  only. So 59% of the water column, by depth, has no measurement between 1380
+  m and the bottom. Flat-bottom modes computed on H = 3390 m are being fitted
+  to data that spans the top 41% of that depth. This is the largest
+  unresolved assumption at F1 and it is not shared by any other mooring in
+  the array.
+
+  KNOCKDOWN IS LARGE: the per-sensor depth range has a median of 116 m and a
+  maximum of 205 m, against 56 m at F2. Isopycnal-following eta is immune to
+  this by construction, but anything that assumes a fixed sensor depth is
+  not.
+
+  MEAN OBSERVED DEPTHS RUN 2 TO 4 m DEEPER than nominal on the wire, which is
+  the opposite sign to F2, F3 and F4. Worth one look before trusting either
+  number.
+
+------------------------------------------------------------------------------
+ 7.  PROVENANCE
+------------------------------------------------------------------------------
+
+  T, S and z from Anna Simpson; u and v from Conrad Luecke. Section 3 is
+  measured from F1_fullfield.mat and is reproducible; sections 4 and 5 are
+  transcribed from the deployment sheet and are not. The original,
+  unformatted version of this file is kept verbatim at
+  original_info/f1_info.txt.
+
+==============================================================================
+ Reformatted 2026-10-29. Sections 1-3 are measured from the data; 4-5 are
+ transcribed; 6 is interpretation. Original kept at original_info/.
+==============================================================================

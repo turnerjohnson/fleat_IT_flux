@@ -1,11 +1,10 @@
 % turner_fleat2_IT_flux.m
 
-% Main workspace for calculating <u'p'> = F for Palau FLEAT moorings.
+% Main (concise) workspace for calculating <u'p'> = F for Palau FLEAT moorings.
 
 % First getting p' from vertical mode fits of η, isopycnal displacement, to
 % get full-column values for density. Then integrate eta/density to get p.
-
-
+% Velocity (horizontal) modes come from same fit, 
 
 
 
@@ -23,134 +22,54 @@
 %                           this uses running mean instead of recird-mean
 %                           to remove mesoscale heave (~25d)
 
-
-% adapted from turner_tinker_fleat.m
-
 % author TEJ, based on methods from Alford03 and Nash05 with help from Claude
 % 5 Sept 2026
 
-% gridded T, S, z data from Anna Simpson
-% gridded u, v, data from Conrad Luecke
+% gridded T, S, z, u, v data from Anna Simpson
 
 % --------------------------------------------
 clear; close all;
+
+showPlots = 1;
+
 addpath(genpath('/Users/tej/Documents'))
 
-%% 0.0 config and load data.
-cfg = f2_config();
-F2 = load("/Users/tej/Documents/research_fleat/data/simpson/F2_fullfield.mat").fullfield;
-
-%% 0.0 alternate: sthentic dataset to check physics logic
-[F2, cfg] = synth_baroclinic();
-%% 0. take hourly average
-
-k = cfg.avg_k; % k=6 samples per hour.
-hravg = @(X) reshape( squeeze(mean(reshape( X(:,1:floor(size(X,2)/k)*k), ...
-              size(X,1), k, []), 2, 'omitnan')), size(X,1), []);
-
-F2_h.time = hravg(F2.time);
-F2_h.depth = hravg(F2.depth);          % [nsens x nt] instrument depth, positive down
-F2_h.T = hravg(F2.T);
-F2_h.S = hravg(F2.S);    
-F2_h.u = hravg(F2.u);   
-F2_h.v = hravg(F2.v);   
-
-fprintf('%d sensors, %d hours (%.0f days)\n', size(F2_h.depth,1), numel(F2_h.time), F2_h.time(end)-F2_h.time(1));
+%%
+cfg = f4_config();
+F2 = load("/Users/tej/Documents/research_fleat/data/simpson/F4_fullfield.mat").fullfield;
 
 
-%% 1. compute density
-
-F2_h.p = sw_pres(F2_h.depth, cfg.lat);
-F2_h.sigma = sw_pden(F2_h.S, F2_h.T, F2_h.p, 0) - 1000;
-
-% How much of the density signal is salinity doing? At 8.5 N with a barrier
-% layer this is not rhetorical, and it is worth having the number ready if
-% anyone asks how far you trust the glider S.
-
-sigma_fixedS = sw_pden(repmat(mean(F2_h.S,2,'omitnan'),1,size(F2_h.S,2)), F2_h.T, F2_h.p, 0) - 1000;
-fprintf('rms sigma difference, glider S vs time-mean S: %.4f kg m^-3\n', ...
-        std(F2_h.sigma(:) - sigma_fixedS(:), 'omitnan'));
+[F2.T, F2.S] = qc_ts(F2.T, F2.S, F2.depth, cfg);
+F2_h = mooring_hourly_mean(F2, cfg);
+F2_h = compute_density_mooring(F2_h, cfg);
 
 %% optional: look at section data
-
-temp_cont = [];%2:1:25;
+temp_cont = [];
 sal_cont = 34.4:.02:34.9;
 uv_cont = -.25:.01:.25;
-time_lim = 2900:2999;
+time_lim = [];%2900:2999;
 
-% figure(1)
-% subplot(4,1,1)
-% psectime_mooring(F2_h, 'T', [], temp_cont, [], [], 'depth', [], cfg);
-% subplot(4,1,2)
-% %psectime_mooring(F2_h, 'S', [], sal_cont, [], [], 'depth',[], cfg);
-% subplot(4,1,3)
-% psectime_mooring(F2_h, 'u', [], uv_cont, [], [], 'depth', [], cfg);
-% subplot(4,1,4)
-% psectime_mooring(F2_h, 'v', [], uv_cont, [], [], 'depth', [], cfg);
-
-figure(2)
-psecline_mooring(F2_h, 'sigma',  [],  'depth', [], cfg);
-
-
-figure(1)
-subplot(4,1,1)
-psectime_mooring(F2_h, 'T', [], temp_cont, [], [], 'depth', 300, cfg, time_lim);
-subplot(4,1,2)
-psectime_mooring(F2_h, 'S', [], sal_cont, [], [], 'depth', 300, cfg, time_lim);
-subplot(4,1,3)
-psectime_mooring(F2_h, 'u', [], uv_cont, [], [], 'depth', 300, cfg, time_lim);
-subplot(4,1,4)
-psectime_mooring(F2_h, 'v', [], uv_cont, [], [], 'depth', 300, cfg, time_lim);
-
-% figure(2)
-% subplot(4,1,1)
-% psecline_mooring(F2_h, 'T', temp_cont, 'depth', 150, cfg, time_lim);
-% subplot(4,1,2)
-% psecline_mooring(F2_h, 'S',  sal_cont, 'depth', 150, cfg, time_lim);
-% subplot(4,1,3)
-% psecline_mooring(F2_h, 'u',  uv_cont, 'depth', 150, cfg, time_lim);
-% subplot(4,1,4)
-% psecline_mooring(F2_h, 'v',  uv_cont, 'depth', 150, cfg, time_lim);
-
-%% optional: look at glider data.
-% gli = load_spray_fleat("/Users/tej/Documents/research_fleat/data/spray_FLEAT.nc");
-% 
-% % just what's near F2 during the deployment
-% gli = load_spray_fleat("/Users/tej/Documents/research_fleat/data/spray_FLEAT.nc", ...
-%         'lat0', 8.5027, 'lon0', 134.5918, 'radius', 100, ...
-%         'tlim', [F2_h.time(1) F2_h.time(end)]);
-% 
-% plot_glider_coverage(gli, 8.5027, 134.5918, 100, ...
-%                      [F2_h.time(1) F2_h.time(end)], 'spray_FLEAT.nc')
+p = psectime_glance_mooring(F2_h, cfg, temp_cont, sal_cont, uv_cont, time_lim, 1500);
 
 %% 2. background/mean density, stratification profile
-F2_h.bkgd = f2_background(F2_h.depth, F2_h.sigma, cfg);
+% Builds BOTH N2 estimates and selects cfg.N2_source. See f_background_v2 for
+% what separates them; f2_background is the older sigma-only version and still
+% runs if you want to compare.
+F2_h.bkgd = f_background_v2(F2_h, cfg);
 
-figure('Position',[80 80 1100 420],'Color','w')
-subplot(1,3,1)
-     % mean sigma profile 
-  plot(F2_h.bkgd.sig_full, F2_h.bkgd.zfull, 'LineWidth',1.3); hold on
-     % stabilized mean sigma scattered on surfaces
-  plot(F2_h.bkgd.sig_t, F2_h.bkgd.zref, 'o', 'MarkerSize',4)
-  yline(cfg.mld,'r--','MLD'); xlabel('\sigma_\theta'); ylabel('z [m]')
-  title('mean profile + mixed layer'); legend('full','binned','Location','southwest')
-  set(gca, 'YDir', 'reverse');
+%cfg.N2_source = 'gridded';  F2_h.bkgd = set_N2_source(F2_h.bkgd, cfg.N2_source);
 
-subplot(1,3,2)
-     % smoothed, positive N2 from sig_full
-  semilogx(F2_h.bkgd.N2full, F2_h.bkgd.zfull, 'LineWidth',1.3); hold on
-     % median N2 from gridded Simpson fullfield
-  semilogx(median(F2.N2,2,'omitnan'), mean(F2_h.depth,2,'omitnan'), '.')
-  xlabel('N^2 [s^{-2}]'); title('N^2'); legend('from sigma','F.N2 median','Location','southeast')
-  set(gca, 'YDir', 'reverse');
+if showPlots
+    plot_background(F2_h.bkgd, cfg, 4);   % 5 is the modes figure further down
+end
 
-subplot(1,3,3)
-     % buoyancy period: 60 * 2π / N2
-  plot(2*pi./sqrt(F2_h.bkgd.N2full)/60, F2_h.bkgd.zfull, 'LineWidth',1.3)
-  xlabel('buoyancy period [min]'); title('sanity check')
-  set(gca, 'YDir', 'reverse');
+% Look at the middle panel, then uncomment line 62 to switch. Both profiles are already
+% on F2_h.bkgd, so this costs nothing and does not rebuild the background.
+% Rerun from cell 4 afterwards -- the modes and everything past them are stale.
 
-% The two N2 curves should agree. 
+
+% The two N2 curves do not have to agree. Where they disagree is a statement
+% about the salinity, the mixed-layer cap and Simpson's processing, not noise.
 
 %% 3. displacement of isopycnal surfaces
 eta = f2_eta(F2_h.depth, F2_h.sigma, F2_h.bkgd, F2_h.time, cfg);
@@ -176,54 +95,54 @@ psecline_mooring(F2_h.iso, 'eta', [], 'depth', [], cfg, i0:i0+10*24);
 F2_h.modes = build_modes(F2_h.bkgd.zfull, F2_h.bkgd.N2full, cfg.lat, cfg.nbc, cfg.rho0);
 fprintf('eigenspeeds: %s m/s\n', mat2str(round(F2_h.modes.c*1000)/1000));
 
-figure('Position',[80 80 1000 420],'Color','w')
-subplot(1,3,1)
-  plot(F2_h.modes.Zeta, F2_h.modes.z, 'LineWidth',1.4); hold on
-  plot(zeros(size(F2_h.bkgd.zref)), F2_h.bkgd.zref, 'k.', 'MarkerSize',9)
-  xlabel('\zeta modes'); ylabel('z (m)'); title('displacement (for \eta)')
-  legend(arrayfun(@(j)sprintf('%d',j),1:cfg.nbc,'uni',0),'Location','southeast','Box','off')
-  set(gca, 'YDir', 'reverse');
-subplot(1,3,2)
-  plot(F2_h.modes.Zu, F2_h.modes.z, 'LineWidth',1.4)
-  xlabel('u modes'); title('horizontal velocity (for u'')')
-  set(gca, 'YDir', 'reverse');
-subplot(1,3,3)
-  plot(F2_h.modes.P, F2_h.modes.z, 'LineWidth',1.4)
-  xlabel('P '); title('pressure')
-  set(gca, 'YDir', 'reverse');
-
+if showPlots
+    figure(5)
+    subplot(1,3,1)
+      plot(F2_h.modes.Zeta, F2_h.modes.z, 'LineWidth',1.4); hold on
+      plot(zeros(size(F2_h.bkgd.zref)), F2_h.bkgd.zref, 'k.', 'MarkerSize',9)
+      xlabel('\zeta modes'); ylabel('z (m)'); title('displacement (for \eta)')
+      legend(arrayfun(@(j)sprintf('%d',j),1:cfg.nbc,'uni',0),'Location','southeast','Box','off')
+      set(gca, 'YDir', 'reverse');
+    subplot(1,3,2)
+      plot(F2_h.modes.Zu, F2_h.modes.z, 'LineWidth',1.4)
+      xlabel('u modes'); title('horizontal velocity (for u'')')
+      set(gca, 'YDir', 'reverse');
+    subplot(1,3,3)
+      plot(F2_h.modes.P, F2_h.modes.z, 'LineWidth',1.4)
+      xlabel('P '); title('pressure')
+      set(gca, 'YDir', 'reverse');
+end
 
 
 %% 5. fit and bandpass 
 opt = struct('nmodes',cfg.nbc, 'weight',cfg.fit_weight, 'minobs',cfg.fit_minobs);
 
-switch cfg.band_order
-  case 'fit_first'
-    % Fit raw eta (NaN-tolerant), then filter the amplitude series.
-    [ahat_raw, fit] = fit_eta_modes(eta.eta, F2_h.bkgd.zref, F2_h.modes, opt);
-    gap  = ~all(isfinite(ahat_raw),1);
-    afil = fillmissing(ahat_raw, 'linear', 2, 'EndValues','nearest');
-    ahat_M2 = bandpass_alford(afil, cfg.dt_hr, cfg.M2_cpd, cfg.bw_c);
-    ahat_f  = bandpass_alford(afil, cfg.dt_hr, cfg.f_cpd,  cfg.bw_c);
-    ahat_M2(:,gap) = NaN;  ahat_f(:,gap) = NaN;
+% FIT FIRST. cfg.band_order is gone from fleat_config_base as of 10 Nov 2026 --
+% the orders commute (the fit is linear in eta at each timestep), so the only
+% real difference is where the gaps get filled before filtfilt, and fitting
+% first fills nbc amplitude series instead of 40 gappy sensor levels. The full
+% argument is at the top of cell 5 in fleat_IT_flux.m.
+%
+% Fit raw eta (NaN-tolerant), then filter the amplitude series.
+[ahat_raw, fit] = fit_eta_modes(eta.eta, F2_h.bkgd.zref, F2_h.modes, opt);
+gap  = ~all(isfinite(ahat_raw),1);
+afil = fillmissing(ahat_raw, 'linear', 2, 'EndValues','nearest');
+ahat_M2 = bandpass_alford(afil, cfg.dt_hr, cfg.M2_cpd, cfg.bw_c);
+ahat_f  = bandpass_alford(afil, cfg.dt_hr, cfg.f_cpd,  cfg.bw_c);
+ahat_M2(:,gap) = NaN;  ahat_f(:,gap) = NaN;
 
-    eta_fill = fillmissing(eta.eta, 'linear', 2, 'EndValues','nearest');
-    eta_M2   = bandpass_alford(eta_fill, cfg.dt_hr, cfg.M2_cpd, cfg.bw_c);
-    eta_M2(~isfinite(eta.eta)) = NaN;
+eta_fill = fillmissing(eta.eta, 'linear', 2, 'EndValues','nearest');
+eta_M2   = bandpass_alford(eta_fill, cfg.dt_hr, cfg.M2_cpd, cfg.bw_c);
+eta_M2(~isfinite(eta.eta)) = NaN;
 
-  case 'filter_first'
-    % Alford's order: filter at the sensor levels, then fit each timestep.
-    eta_fill = fillmissing(eta.eta, 'linear', 2, 'EndValues','nearest');
-    eta_M2   = bandpass_alford(eta_fill, cfg.dt_hr, cfg.M2_cpd, cfg.bw_c);
-    eta_f    = bandpass_alford(eta_fill, cfg.dt_hr, cfg.f_cpd,  cfg.bw_c);
-    eta_M2(~isfinite(eta.eta)) = NaN;  eta_f(~isfinite(eta.eta)) = NaN;
-    [ahat_M2, fit] = fit_eta_modes(eta_M2, F2_h.bkgd.zref, F2_h.modes, opt);
-    ahat_f         = fit_eta_modes(eta_f,  F2_h.bkgd.zref, F2_h.modes, opt);
-    ahat_raw       = fit_eta_modes(eta.eta,  F2_h.bkgd.zref, F2_h.modes, opt);  % for the varexp plot
-
-  otherwise
-    error('unknown cfg.band_order "%s"', cfg.band_order);
-end
+% ---- Alford's order, filter_first, if you ever want it back here ----
+% eta_fill = fillmissing(eta.eta, 'linear', 2, 'EndValues','nearest');
+% eta_M2   = bandpass_alford(eta_fill, cfg.dt_hr, cfg.M2_cpd, cfg.bw_c);
+% eta_f    = bandpass_alford(eta_fill, cfg.dt_hr, cfg.f_cpd,  cfg.bw_c);
+% eta_M2(~isfinite(eta.eta)) = NaN;  eta_f(~isfinite(eta.eta)) = NaN;
+% [ahat_M2, fit] = fit_eta_modes(eta_M2, F2_h.bkgd.zref, F2_h.modes, opt);
+% ahat_f         = fit_eta_modes(eta_f,  F2_h.bkgd.zref, F2_h.modes, opt);
+% ahat_raw       = fit_eta_modes(eta.eta,  F2_h.bkgd.zref, F2_h.modes, opt);  % for the varexp plot
 
 fprintf('complete fits at %d of %d timesteps\n', nnz(all(isfinite(ahat_M2),1)), numel(F2_h.time));
 fprintf('rms M2 amplitude by mode:     %s m\n', mat2str(round(std(ahat_M2,0,2,'omitnan')',2)));
@@ -233,30 +152,28 @@ fprintf('rms near-f amplitude by mode: %s m\n', mat2str(round(std(ahat_f, 0,2,'o
 % Run the other order and see whether it changes anything. If the two agree to a
 % percent or so, the choice is immaterial for this dataset and you can say so in
 % one sentence instead of defending it.
-cfg2 = cfg;
-cfg2.band_order = 'filter_first';
-if strcmp(cfg.band_order,'fit_first')
-    eta_f2 = fillmissing(eta.eta,'linear',2,'EndValues','nearest');
-    eta_f2 = bandpass_alford(eta_f2, cfg.dt_hr, cfg.M2_cpd, cfg.bw_c);
-    eta_f2(~isfinite(eta.eta)) = NaN;
-    ahat_alt = fit_eta_modes(eta_f2, F2_h.bkgd.zref, F2_h.modes, opt);
-    rel = std(ahat_M2 - ahat_alt, 0, 2, 'omitnan') ./ std(ahat_M2, 0, 2, 'omitnan');
-    fprintf('fit_first vs filter_first, rms relative difference by mode: %s\n', ...
-            mat2str(round(rel'*1000)/1000));
-end
+% eta_M2 above IS the band-passed eta at the sensor levels, so filter_first is
+% just one more fit from here.
+ahat_alt = fit_eta_modes(eta_M2, F2_h.bkgd.zref, F2_h.modes, opt);
+rel = std(ahat_M2 - ahat_alt, 0, 2, 'omitnan') ./ std(ahat_M2, 0, 2, 'omitnan');
+fprintf('fit_first vs filter_first, rms relative difference by mode: %s\n', ...
+        mat2str(round(rel'*1000)/1000));
 
-figure('Position',[80 80 1000 550],'Color','w')
-for j = 1:cfg.nbc
-    subplot(cfg.nbc,1,j)
-    %plot(F2_h.time, ahat_M2(j,:)); hold on; 
-    c = orderedcolors("gem"); plot(F2_h.time, ahat_f(j,:), 'Color', c(2,:))
-    datetick('x','mmm'); ylabel(sprintf('eta m%d (m)',j)); box on
-    if j==1, legend('M_2','near-f','Box','off','Orientation','horizontal'); end
-    linkaxes(findall(gcf,'Type','axes'),'y')
+if showPlots
+    figure(6)
+    for j = 1:cfg.nbc
+        subplot(cfg.nbc,1,j)
+        %plot(F2_h.time, ahat_M2(j,:)); hold on; 
+        c = orderedcolors("gem"); plot(F2_h.time, ahat_f(j,:), 'Color', c(2,:))
+        datetick('x','mmm'); ylabel(sprintf('eta m%d (m)',j)); box on
+        if j==1, legend('M_2','near-f','Box','off','Orientation','horizontal'); end
+        linkaxes(findall(gcf,'Type','axes'),'y')
+    end
 end
 %% spectra sanity check
-S = f2_eta_spectra(ahat_raw, F2_h.time, cfg, struct('shoulders',[1.25 1.60 2.55 3.50]));
-
+if showPlots
+    S = f2_eta_spectra(ahat_raw, F2_h.time, cfg, struct('shoulders',[1.25 1.60 2.55 3.50]));
+end
 %% ==== 6b. is nbc the right number? ==================================
 % Data-driven, no simulation. Two views of the same question.
 %
@@ -268,27 +185,28 @@ S = f2_eta_spectra(ahat_raw, F2_h.time, cfg, struct('shoulders',[1.25 1.60 2.55 
 %
 % This is Alford's "know when you look at it", made into something you can put
 % on a slide. Adjust cfg.nbc and rerun from cell 5.
-
-ve = median(fit.varexp, 2, 'omitnan');
-figure('Position',[80 80 900 400],'Color','w')
-subplot(1,2,1)
-  plot(1:cfg.nbc, ve, 'o-', 'LineWidth',1.4); grid on
-  xlabel('modes retained'); ylabel('median cumulative variance explained')
-  ylim([0 1]); xticks(1:cfg.nbc); title('where does this flatten?')
-subplot(1,2,2)
-  hold on; box on
-  for m = 1:cfg.nbc
-      r = eta.eta - fit.A(:,1:m)*ahat_raw(1:m,:);
-      plot(std(r, 0, 2, 'omitnan'), F2_h.bkgd.zref, 'o-', 'LineWidth',1.2)
-  end
-  plot(std(eta.eta,0,2,'omitnan'), F2_h.bkgd.zref, 'k--', 'LineWidth',1.2)
-  xlabel('rms residual \eta [m]'); ylabel('z [m]')
-  set(gca, 'YDir', 'reverse');
-
-  legend([arrayfun(@(m)sprintf('1-%d',m),1:cfg.nbc,'uni',0) {'no fit'}], ...
-         'Location','northeast')
-
-fprintf('median cumulative variance explained: %s\n', mat2str(round(ve',3)));
+if showPlots
+    ve = median(fit.varexp, 2, 'omitnan');
+    figure(8)
+    subplot(1,2,1)
+      plot(1:cfg.nbc, ve, 'o-', 'LineWidth',1.4); grid on
+      xlabel('modes retained'); ylabel('median cumulative variance explained')
+      ylim([0 1]); xticks(1:cfg.nbc); title('where does this flatten?')
+    subplot(1,2,2)
+      hold on; box on
+      for m = 1:cfg.nbc
+          r = eta.eta - fit.A(:,1:m)*ahat_raw(1:m,:);
+          plot(std(r, 0, 2, 'omitnan'), F2_h.bkgd.zref, 'o-', 'LineWidth',1.2)
+      end
+      plot(std(eta.eta,0,2,'omitnan'), F2_h.bkgd.zref, 'k--', 'LineWidth',1.2)
+      xlabel('rms residual \eta [m]'); ylabel('z [m]')
+      set(gca, 'YDir', 'reverse');
+    
+      legend([arrayfun(@(m)sprintf('1-%d',m),1:cfg.nbc,'uni',0) {'no fit'}], ...
+             'Location','northeast')
+    
+    fprintf('median cumulative variance explained: %s\n', mat2str(round(ve',3)));
+end
 %% ==== % variance explained vs number of modes ======================
 nmax = 10;
 Mx   = build_modes(F2_h.bkgd.zfull, F2_h.bkgd.N2full, cfg.lat, nmax, cfg.rho0);
@@ -311,16 +229,17 @@ for s = 1:2
     pct(:,s) = (1 - num/den);
 end
 
-figure('Color','w')
-plot(1:nmax, pct(:,1), 'o-', 'LineWidth',1.4); hold on
-plot(1:nmax, pct(:,2), 'o-', 'LineWidth',1.4)
-grid on; ylim([0 1]); xlim([0.5 nmax+0.5]); xticks(1:nmax)
-xlabel('number of modes fit'); ylabel('median cumulative \eta variance explained')
-legend(names, 'Location','southeast')
-title('where does this flatten enough?')
-fprintf('%% explained, raw: %s\n', mat2str(round(pct(:,1)',1)));
-fprintf('%% explained, M2:  %s\n', mat2str(round(pct(:,2)',1)));
-
+if showPlots
+    figure(9)
+    plot(1:nmax, pct(:,1), 'o-', 'LineWidth',1.4); hold on
+    plot(1:nmax, pct(:,2), 'o-', 'LineWidth',1.4)
+    grid on; ylim([0 1]); xlim([0.5 nmax+0.5]); xticks(1:nmax)
+    xlabel('number of modes fit'); ylabel('median cumulative \eta variance explained')
+    legend(names, 'Location','southeast')
+    title('where does this flatten enough?')
+    fprintf('%% explained, raw: %s\n', mat2str(round(pct(:,1)',1)));
+    fprintf('%% explained, M2:  %s\n', mat2str(round(pct(:,2)',1)));
+end
 %% ==== 7. p', two routes, cross-checked ==============================
 % ROUTE A (modal). M.P already carries the sign and the zero-depth-mean
 % condition (Nash eq. 4), so this is one line.
@@ -357,16 +276,17 @@ fprintf('sign check: dp''/dd matches sign of rho0*N2*eta at %.2f%% of (depth, ti
 fprintf('            max |dp''/dd - rho0*N2*eta| = %.2e of max |rho0*N2*eta|\n', ...
         max(abs(lhs(ok) - rhs(ok)))/max(abs(rhs(ok))));
 
-% one timestep, by eye: the timestep with the largest M2 pressure signal
-it=30;
-figure
-plot(eta_full(:,it), F2_h.modes.z, 'LineWidth',1.4); hold on
-plot(pprime_A(:,it), F2_h.modes.z, 'LineWidth',1.4)
-xline(0,'k:'); set(gca,'YDir','reverse'); box on
-xlabel('\eta (m),  p'' (dbar)')
-legend('\eta_{M2}','p''','Location','southeast','Box','off')
-title('p'' slopes positive where \eta > 0','FontWeight','normal')
-
+if showPlots
+    % one timestep, by eye: the timestep with the largest M2 pressure signal
+    it=30;
+    figure(10)
+    plot(eta_full(:,it), F2_h.modes.z, 'LineWidth',1.4); hold on
+    plot(pprime_A(:,it), F2_h.modes.z, 'LineWidth',1.4)
+    xline(0,'k:'); set(gca,'YDir','reverse'); box on
+    xlabel('\eta (m),  p'' (dbar)')
+    legend('\eta_{M2}','p''','Location','southeast','Box','off')
+    title('p'' slopes positive where \eta > 0','FontWeight','normal')
+end
 
 %% ==== 8. the movie ==================================================
 fitM = fit;  fitM.varexp = nan(cfg.nbc, numel(F2_h.time));
@@ -380,11 +300,12 @@ for it = 1:numel(F2_h.time)
     end
 end
 
+if showPlots
 mopt = struct('outfile','modes_F2_M2_again.mp4', 'fps',8, 'pplot',true);
 i0 = find(all(isfinite(ahat_M2),1), 1) + 200*24;    % clear of the filter edges
 mopt.frames = i0:2:(i0 + 10*24);                    % 10 days, every 2 h
-mode_movie(eta_M2, F2_h.bkgd.zref, F2_h.modes, ahat_M2, fitM, F2_h.time, mopt);
-
+    mode_movie(eta_M2, F2_h.bkgd.zref, F2_h.modes, ahat_M2, fitM, F2_h.time, mopt);
+end
 
 %% ===================================================================
 %  F2 MOORING -- CONTEXT THAT IS NOT RECOVERABLE FROM THE DATA ALONE
@@ -525,59 +446,66 @@ F2_h.uv_modes = fit_uv_modes(F2_h, F2_h.modes, cfg, struct('nmodes', cfg.nbc));
 nrow = size(F2_h.uv_modes.uhat_M2, 1);   % 1 + however many modes were actually fit
 c    = orderedcolors("gem");
 
-figure('Position',[80 80 1000 650],'Color','w')
-for r = 1:nrow
-    subplot(nrow, 1, r)
-    plot(F2_h.time, F2_h.uv_modes.uhat_M2(r,:), 'Color', c(1,:)); hold on
-    datetick('x','mmm'); box on
-    if r == 1
-        ylabel('u m0 (BT) [m/s]')
-    else
-        ylabel(sprintf('u m%d [m/s]', r-1))
+if showPlots
+    figure(12)
+    for r = 1:nrow
+        subplot(nrow, 1, r)
+        plot(F2_h.time, F2_h.uv_modes.uhat_M2(r,:), 'Color', c(1,:)); hold on
+        datetick('x','mmm'); box on
+        if r == 1
+            ylabel('u m0 (BT) [m/s]')
+        else
+            ylabel(sprintf('u m%d [m/s]', r-1))
+        end
     end
-end
-linkaxes(findall(gcf,'Type','axes'),'y')
-
-figure('Position',[80 80 1000 650],'Color','w')
-for r = 1:nrow
-    subplot(nrow, 1, r)
-    plot(F2_h.time, F2_h.uv_modes.vhat_M2(r,:), 'Color', c(2,:))
-    datetick('x','mmm'); box on
-    if r == 1
-        ylabel('v m0 (BT) (m/s)')
-    else
-        ylabel(sprintf('v m%d (m/s)', r-1))
+    linkaxes(findall(gcf,'Type','axes'),'y')
+    
+    figure(13)
+    for r = 1:nrow
+        subplot(nrow, 1, r)
+        plot(F2_h.time, F2_h.uv_modes.vhat_M2(r,:), 'Color', c(2,:))
+        datetick('x','mmm'); box on
+        if r == 1
+            ylabel('v m0 (BT) (m/s)')
+        else
+            ylabel(sprintf('v m%d (m/s)', r-1))
+        end
     end
-end
-linkaxes(findall(gcf,'Type','axes'),'y')
-
-figure('Position',[80 80 1000 650],'Color','w')
-for r = 1:nrow
-    subplot(nrow, 1, r)
-    plot(F2_h.time, F2_h.uv_modes.uhat_M2(r,:), 'Color', c(1,:)); hold on
-    plot(F2_h.time, F2_h.uv_modes.vhat_M2(r,:), 'Color', c(2,:))
-    datetick('x','mmm'); box on
-    if r == 1
-        ylabel('mode 0 (BT) (m/s)')
-        legend('u','v','Box','off','Orientation','horizontal')
-    else
-        ylabel(sprintf('mode %d [m/s]', r-1))
+    linkaxes(findall(gcf,'Type','axes'),'y')
+    
+    figure(14)
+    for r = 1:nrow
+        subplot(nrow, 1, r)
+        plot(F2_h.time, F2_h.uv_modes.uhat_M2(r,:), 'Color', c(1,:)); hold on
+        plot(F2_h.time, F2_h.uv_modes.vhat_M2(r,:), 'Color', c(2,:))
+        datetick('x','mmm'); box on
+        if r == 1
+            ylabel('mode 0 (BT) (m/s)')
+            legend('u','v','Box','off','Orientation','horizontal')
+        else
+            ylabel(sprintf('mode %d [m/s]', r-1))
+        end
     end
+    linkaxes(findall(gcf,'Type','axes'),'y')
 end
-linkaxes(findall(gcf,'Type','axes'),'y')
-
 
 %% tidal flux calculation
 tidal_flux = compute_tidal_flux(ahat_M2, F2_h.uv_modes.uhat_M2, F2_h.uv_modes.vhat_M2, ...
                        F2_h.modes, cfg, struct('periods', 2));
 
-flux_movie(tidal_flux, F2_h.time, 8.5027, 134.5918, ...
-           'Palau_4_100m_100m_139merge.nc', struct('outfile','flux_F2.mp4'));
+%flux_movie(tidal_flux, F2_h.time, cfg);
 
 
 %% tidal ellipse to check...
+if showPlots
+    E = plot_tidal_ellipse(F2_h, cfg);
+end
+%%
 
-E = plot_tidal_ellipse(F2_h, cfg);
+% real record only
+%plot_uvp_phase(F2_h, ahat_M2, cfg, datenum(2016,11,15));
+
+% synthetic (NW arrival) vs real, same three modes
+compare_synth_real_uvp(F2_h, ahat_M2, cfg, datenum(2016,10,15), "to_deg", 360);
 
 %%
-R = synth_check(F2, F2_h, eta, ahat_M2, tidal_flux, cfg);

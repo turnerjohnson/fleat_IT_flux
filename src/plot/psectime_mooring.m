@@ -3,7 +3,10 @@ function h = psectime_mooring(structure, var1, var2, cont1, cont2, cont2h, ztype
 %
 %   h = psectime_mooring(structure, var1, var2, cont1, cont2, cont2h, ztype, zmax, cfg)
 %
-%   structure  mooring struct (e.g. F2) with .time, .depth and the named fields
+%   structure  mooring struct (e.g. F2) with .time, .depth and the named fields.
+%              .depth is [nsens x ntime] -- each sensor's own depth through the
+%              record. A gridded product whose levels are fixed may pass the
+%              level vector instead; it is expanded here.
 %   var1       fieldname contoured in colour
 %   var2       fieldname contoured in black. [] to skip.
 %   cont1      contour levels for var1. [] to autoset (~15 over robust range).
@@ -33,12 +36,41 @@ function h = psectime_mooring(structure, var1, var2, cont1, cont2, cont2h, ztype
 % author TEJ 9 September 2026, with help from Claude.
 
 %% ---- arguments ------------------------------------------------------
+% var1 is not optional, and there is deliberately no default field: which
+% variable to contour is the whole content of the call. Without this, MATLAB
+% raises "Not enough input arguments" from whichever line touches var1 first,
+% which names neither the argument nor the reason.
+if nargin < 2 || isempty(var1)
+    error('psectime_mooring:novar', ...
+        ['var1 is required: which field to contour, e.g. ' ...
+         'psectime_mooring(%s, ''T''). Available: %s'], ...
+         argname(inputname(1)), strjoin(fieldnames(structure)', ', '));
+end
 if nargin < 5, cont2  = []; end
 if nargin < 6, cont2h = []; end
 if nargin < 7 || isempty(ztype), ztype = 'depth'; end
 if nargin < 8, zmax = []; end
 if nargin < 9 || isempty(cfg), cfg = struct(); end
 if nargin < 10, tidx = []; end
+
+% zmax IS A SCALAR MAX DEPTH. Validated because the mistake is silent: a
+% two-element [zmin zmax] makes the comparison below expand into an
+% [nsens x 2] mask, every row is dropped, and the autoset further down then
+% reports "all NaN or constant" about a field that was perfectly fine.
+%
+% The way this actually happens is worse than a typo. A caller writing
+%     psectime_mooring(..., 'depth', zlim, cfg, tidx)
+% in a script that never assigns zlim gets MATLAB's BUILT-IN zlim(), which
+% returns the current axes' z-limits, i.e. [0 1] -- a valid-looking pair of
+% numbers that silently cuts every sensor, since nothing is shallower than 1 m.
+if ~isempty(zmax) && (~isnumeric(zmax) || ~isscalar(zmax))
+    error('psectime_mooring:zmax', ...
+        ['zmax is a single max depth in metres, e.g. 300, or [] for no cut. ' ...
+         'Got %s.\nIf that looks like a pair of axis limits, check the ' ...
+         'variable you passed is assigned -- an unassigned "zlim" resolves to ' ...
+         'MATLAB''s built-in zlim() and returns the current axes'' z-limits.'], ...
+         mat2str(zmax));
+end
 
 if isfield(cfg,'mooring') && ~isempty(cfg.mooring)
     mname = cfg.mooring;
@@ -96,6 +128,40 @@ if ~isempty(V2) && (numel(t1) ~= numel(t2) || any(abs(t1(:)-t2(:)) > 1e-9))
 end
 
 D = structure.depth;
+
+% .depth IS [nsens x ntime], NOT the depth grid. A gridded product (TZdepth,
+% F*_fullfield) carries its levels as a vector -- Zdepth is [1 x 95] -- and
+% handing that straight over is the obvious mistake, because every other field
+% in the same file is already [nz x nt] and looks fine. Expand it here rather
+% than fail: a fixed grid is a mooring whose sensors happen not to move, which
+% is a legitimate special case of what this function plots, not a different
+% kind of input. The alternative error message blames the time base
+% ('depth has 95 columns, which matches neither time nor slopetime') and sends
+% the reader looking in the wrong place entirely.
+if isvector(D) && ~isscalar(D)
+    if numel(D) == size(V1,1)
+        D = repmat(D(:), 1, numel(t1));
+    elseif numel(D) == numel(t1)
+        error('psectime_mooring:depthvector', ...
+            ['.depth is a %s vector matching the TIME length (%d), not the ' ...
+             'sensor count (%d). That is a time series of one depth, not a ' ...
+             'mooring section. Expected [nsens x ntime].'], ...
+             mat2str(size(D)), numel(t1), size(V1,1));
+    else
+        error('psectime_mooring:depthvector', ...
+            ['.depth is a %s vector matching neither the sensor count of ' ...
+             '''%s'' (%d) nor the time length (%d). Expected [nsens x ntime] ' ...
+             '-- for a fixed depth grid z, pass repmat(z(:), 1, numel(time)).'], ...
+             mat2str(size(D)), var1, size(V1,1), numel(t1));
+    end
+end
+if size(D,1) ~= size(V1,1)
+    error('psectime_mooring:depthrows', ...
+        ['.depth has %d rows but ''%s'' has %d. They index the same ' ...
+         'sensors, so these must match -- check whether one of them needs ' ...
+         'transposing.'], size(D,1), var1, size(V1,1));
+end
+
 tD = pick_time(structure, size(D,2), 'depth');
 if numel(tD) ~= numel(t1) || any(abs(tD(:)-t1(:)) > 1e-9)
     D = interp1(tD(:), D.', t1(:)).';
@@ -137,7 +203,14 @@ switch ztype
     ylab = '$z$ (m)';
 
     if ~isempty(zmax)
-        keep = mean(D,2,'omitnan') <= zmax;
+        zbar = mean(D,2,'omitnan');
+        keep = zbar <= zmax;
+        if ~any(keep)
+            error('psectime_mooring:zmaxempty', ...
+                ['zmax = %g m keeps no sensors: the shallowest has a mean ' ...
+                 'depth of %.0f m and the deepest %.0f m.'], ...
+                 zmax, min(zbar), max(zbar));
+        end
         Y = Y(keep,:); X = X(keep,:); V1 = V1(keep,:);
         if ~isempty(V2), V2 = V2(keep,:); end
     end
@@ -176,7 +249,13 @@ switch ztype
     ylab = '$\sigma_\theta$ [kg m$^{-3}$]';
 
     if ~isempty(zmax)
-        keep = mean(Zs, 2, 'omitnan') <= zmax;
+        zbar = mean(Zs, 2, 'omitnan');
+        keep = zbar <= zmax;
+        if ~any(keep)
+            error('psectime_mooring:zmaxempty', ...
+                ['zmax = %g m keeps no density surfaces: their mean depths ' ...
+                 'run %.0f to %.0f m.'], zmax, min(zbar), max(zbar));
+        end
         Y = Y(keep,:); X = X(keep,:); V1 = V1(keep,:); V2 = V2(keep,:);
     end
 end
@@ -215,9 +294,9 @@ colormap(h.ax, cmocean(cmapname, numel(cont1)-1));
 caxis(h.ax, [min(cont1) max(cont1)]);
 
 if ~isempty(V2)
-    [~, h.c2] = contour(h.ax, X, Y, V2, cont2, 'k-', 'LineWidth', 0.4);
+    [~, h.c2] = contour(h.ax, X, Y, V2, cont2, 'k-', 'LineWidth', 0.2);
     if ~isempty(cont2h)
-        [~, h.c2h] = contour(h.ax, X, Y, V2, cont2h, 'k-', 'LineWidth', 1.1, ...
+        [~, h.c2h] = contour(h.ax, X, Y, V2, cont2h, 'k-', 'LineWidth', 2, ...
                              'ShowText','on', 'LabelSpacing', 400);
     end
 end
@@ -291,6 +370,8 @@ switch lower(v)
   case 'spd',          lab = 'speed (m s$^{-1}$)';                     cmap = 'speed';
   case 'u',            lab = '$u$ (m s$^{-1}$)';                       cmap = 'balance'; is_div = true;
   case 'v',            lab = '$v$ (m s$^{-1}$)';                       cmap = 'balance'; is_div = true;
+  case 'upar',         lab = '$u_\parallel$ (m s$^{-1}$)';             cmap = 'balance'; is_div = true;
+  case 'uperp',        lab = '$u_\perp$ (m s$^{-1}$)';                 cmap = 'balance'; is_div = true;
   case {'chi','chissf','chi_nomask'}
                        lab = '$\chi$ ($^\circ$C$^2$ s$^{-1}$)';        cmap = 'matter'; is_log = true;
   case {'eps','epsssf','eps_nomask'}
@@ -305,4 +386,10 @@ switch lower(v)
     warning('psectime_mooring:unknownvar', ...
         'No style entry for ''%s''; using a plain label and thermal.', v);
 end
+end
+
+function n = argname(n)
+% inputname is empty when the caller passed an expression rather than a
+% variable; the message still has to read as something runnable.
+if isempty(n), n = 'mooring'; end
 end

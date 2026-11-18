@@ -1,0 +1,265 @@
+==============================================================================
+ FLEAT MOORING F4  --  INSTRUMENTS, NOMINAL DEPTHS AND RECORD
+==============================================================================
+
+ Position         008 29.862' N, 134 38.723' E    (8.4977 N, 134.6454 E)
+ Setting          eastern cluster, inshore of F3
+ Bottom depth     880 m
+ Instrumented     56 to 848 m   (34 levels in the gridded product)
+ Time grid        2016-06-05 to 2017-04-13   (45072 samples at 10 min,
+                  7512 hourly)
+ Deployment       2016-06-05 to 2017-04-13   (313 days of pressure)
+ Velocity         2016-06-05 to 2017-04-13   (313 days, any sensor)
+ Config window    cfg.t_end = 736650  (2016-11-16), set two days short of
+                  the ADCP failure
+ Knockdown        depth range per sensor: median 165 m, max 196 m
+
+------------------------------------------------------------------------------
+ 1.  RECORD AND DURATION, BY CHANNEL
+------------------------------------------------------------------------------
+
+  Common 10-minute time grid: 2016-06-05 to 2017-04-13, 45072 samples.
+  Coverage below is a fraction of that grid, so a mooring deployed late
+  cannot reach 100%.
+
+  ALL  = window in which EVERY sensor reports. ANY = window in which at
+  least one does. The two differ exactly where something failed.
+
+          coverage %, by sensor      ALL sensors         ANY sensor
+    chan   min    med    max   n=0   (YY-MM-DD)          (YY-MM-DD)
+    ----------------------------------------------------------------------
+    depth  78.8  100.0  100.0    0   16-06-05..17-02-06  16-06-05..17-04-13
+    T      78.8  100.0  100.0    0   16-06-05..17-02-06  16-06-05..17-04-13
+    S       0.0  100.0  100.0    1   16-06-05..17-04-13  16-06-05..17-04-13
+    u       0.0  100.0  100.0    1   16-06-05..16-11-17  16-06-05..17-04-13
+    v       0.0  100.0  100.0    1   16-06-05..16-11-17  16-06-05..17-04-13
+
+------------------------------------------------------------------------------
+ 2.  INSTRUMENT FAILURES
+------------------------------------------------------------------------------
+
+  TWO FAILURES, AND THEY COST MORE THAN HALF THE RECORD.
+
+  1. THE DEEP ADCP QUITS ON 2016-11-17. Sensors 25-33 (observed 636 to 823 m,
+  the bottom two thirds of the column) return u and v with full coverage up
+  to 2016-11-17 and almost nothing after it -- 53% overall. Sensor 24 (537 m)
+  is the transition: 53% coverage with a last good sample on 2017-03-29, i.e.
+  intermittent rather than dead.
+
+  Nothing in the pipeline complains. The velocity fit extrapolates the bottom
+  two thirds of the column from the top 450 m and returns plausible-looking
+  amplitudes. This is the single most dangerous silent failure in the array,
+  and it is why every other config in this directory carries an instruction
+  to check coverage before anything else.
+
+  cfg.t_end = 736650 (2016-11-16) stops two days short of it rather than
+  trying to ride it out. That leaves 164 of 313 days.
+
+  2. SENSOR 2 (Chi-POD 1116, 62 m) LOSES DEPTH AND TEMPERATURE ON 2017-02-06,
+  at 78.8% coverage. This is after the cut and so costs the flux nothing, but
+  it matters to any full-length T analysis.
+
+  Sensor 34 (72140, 848 m) carries neither S nor velocity: it sits below the
+  deepest ADCP bin, on the releases.
+
+  CONSEQUENCE FOR THE ARRAY COMPARISON: F4's flux record is 164 days against
+  F2's and F3's 313. Any array mean, and any statement about seasonality, has
+  to say so. align_flux_records pads F4 with NaN rather than shortening
+  everyone to it, and the movie has to tolerate F4 going blank partway
+  through.
+
+------------------------------------------------------------------------------
+ 3.  GRIDDED SENSOR TABLE  (measured from F4_fullfield.mat)
+------------------------------------------------------------------------------
+
+  z_nom  is the deployment-sheet depth for that serial number (section 4).
+  z_obs  is the mean of the recorded pressure-derived depth.
+  Coverage is percent of the common grid. 'ends' is the last good
+  sample of u; a date earlier than the record end is a failure.
+
+    #  type       SN      z_nom  z_obs    dz    T%    S%    u%  u ends
+    ----------------------------------------------------------------------
+     1 RBR Solo   72106     62.6   55.5  -7.1 100.0  48.5  95.0  2017-04-13
+     2 Chi-POD    1116         -   61.6     -  78.8  99.6  95.2  2017-04-13
+     3 RBR Solo   72107     82.6   73.3  -9.3 100.0 100.0  98.3  2017-04-13
+     4 RBR Solo   72108     92.6   83.1  -9.5 100.0 100.0  99.7  2017-04-13
+     5 RBR Solo   72109    102.6   93.0  -9.6 100.0 100.0 100.0  2017-04-13
+     6 RBR Solo   72110    122.6  112.8  -9.8 100.0 100.0 100.0  2017-04-13
+     7 RBR Solo   72111    132.6  122.7  -9.9 100.0 100.0 100.0  2017-04-13
+     8 RBR Solo   72112    142.6  132.5 -10.1 100.0 100.0 100.0  2017-04-13
+     9 RBR Solo   72113    152.6  142.4 -10.2 100.0 100.0 100.0  2017-04-13
+    10 RBR Solo   72114    172.6  162.2 -10.4 100.0 100.0 100.0  2017-04-13
+    11 RBR Solo   72115    182.6  172.1 -10.5 100.0 100.0 100.0  2017-04-13
+    12 RBR Solo   72116    192.6  181.9 -10.7 100.0 100.0 100.0  2017-04-13
+    13 RBR Solo   72117    202.6  191.8 -10.8 100.0 100.0 100.0  2017-04-13
+    14 RBR Solo   72118    222.6  211.6 -11.0 100.0 100.0 100.0  2017-04-13
+    15 RBR Solo   72119    232.6  221.5 -11.1 100.0 100.0 100.0  2017-04-13
+    16 Chi-POD    603          -  230.0     - 100.0 100.0 100.0  2017-04-13
+    17 RBR Solo   72120    262.6  251.1 -11.5 100.0 100.0 100.0  2017-04-13
+    18 RBR Solo   72121    272.6  260.9 -11.7 100.0 100.0 100.0  2017-04-13
+    19 RBR Solo   72122    312.6  300.4 -12.2 100.0 100.0 100.0  2017-04-13
+    20 RBR Solo   72123    332.6  320.1 -12.5 100.0 100.0 100.0  2017-04-13
+    21 RBR Solo   72143    352.6  339.9 -12.7 100.0 100.0 100.0  2017-04-13
+    22 RBR Solo   72125    402.6  389.2 -13.4 100.0 100.0 100.0  2017-04-13
+    23 RBR Solo   72126    452.6  438.5 -14.1 100.0 100.0  98.5  2017-04-13
+    24 RBR Solo   72127    552.6  537.2 -15.4 100.0 100.0  53.0  2017-03-29
+    25 RBR Solo   72128    652.6  635.9 -16.7 100.0 100.0  53.0  2016-11-17
+    26 RBR Solo   72129    702.6  685.2 -17.4 100.0 100.0  53.0  2016-11-17
+    27 RBR Solo   72154    752.6  734.5 -18.1 100.0 100.0  53.0  2016-11-17
+    28 RBR Solo   72155    792.6  774.0 -18.6 100.0 100.0  53.0  2016-11-17
+    29 RBR Solo   72156    802.6  783.8 -18.8 100.0 100.0  53.0  2016-11-17
+    30 RBR Solo   72157    812.6  793.7 -18.9 100.0 100.0  53.0  2016-11-17
+    31 RBR Solo   72139    822.6  803.6 -19.0 100.0 100.0  53.0  2016-11-17
+    32 RBR Solo   72134    832.6  813.4 -19.2 100.0 100.0  52.9  2016-11-17
+    33 RBR Solo   76286    842.6  823.3 -19.3 100.0 100.0  52.7  2016-11-17
+    34 RBR Solo   72140    868.0  848.2 -19.8 100.0   0.0   0.0  --
+
+------------------------------------------------------------------------------
+ 4.  AS-DEPLOYED INSTRUMENT LIST  (deployment sheet)
+------------------------------------------------------------------------------
+
+  All 45 instruments logged on the deployment sheet, by type and nominal
+  depth. 'grid' marks the 32 that appear as rows in the gridded product;
+  'dead' marks those the original file flagged as not recording.
+
+    type        SN       z_nom   status   ('-' = no fixed depth)
+    --------------------------------------------------------
+    RBR Solo    72106      62.6   grid
+    RBR Solo    72107      82.6   grid
+    RBR Solo    72108      92.6   grid
+    RBR Solo    72109     102.6   grid
+    RBR Solo    72110     122.6   grid
+    RBR Solo    72111     132.6   grid
+    RBR Solo    72112     142.6   grid
+    RBR Solo    72113     152.6   grid
+    RBR Solo    72114     172.6   grid
+    RBR Solo    72115     182.6   grid
+    RBR Solo    72116     192.6   grid
+    RBR Solo    72117     202.6   grid
+    RBR Solo    72118     222.6   grid
+    RBR Solo    72119     232.6   grid
+    RBR Solo    72120     262.6   grid
+    RBR Solo    72121     272.6   grid
+    RBR Solo    72122     312.6   grid
+    RBR Solo    72123     332.6   grid
+    RBR Solo    72143     352.6   grid
+    RBR Solo    72125     402.6   grid
+    RBR Solo    72126     452.6   grid
+    RBR Solo    72127     552.6   grid
+    RBR Solo    72128     652.6   grid
+    RBR Solo    72129     702.6   grid
+    RBR Solo    72154     752.6   grid
+    RBR Solo    72155     792.6   grid
+    RBR Solo    72156     802.6   grid
+    RBR Solo    72157     812.6   grid
+    RBR Solo    72139     822.6   grid
+    RBR Solo    72134     832.6   grid
+    RBR Solo    76286     842.6   grid
+    RBR Solo    72140     868.0   grid
+    RDI ADCP    22476      42.5   not in gridded product
+    RDI ADCP    13596      43.5   not in gridded product
+    RDI ADCP    2467      857.0   not in gridded product
+    SBE 37      3179       43.5   not in gridded product
+    SBE 37      7816      252.6   not in gridded product
+    SBE 37      2428      857.0   not in gridded product
+    SBE 39      5874      112.6   not in gridded product
+    SBE 39      5875      162.6   not in gridded product
+    SBE 39      5867      212.6   dead -- did not work
+    SBE 39      3071      292.6   not in gridded product
+    SBE 39      3074      502.6   not in gridded product
+    SBE 39      665       602.6   not in gridded product
+    SBE 39      1099      857.0   not in gridded product
+
+  THE GRIDDED PRODUCT IS NOT THE MOORING. Only the RBR Solos and the Chi-PODs
+  appear as rows in F4_fullfield.mat. Every SBE 37, SBE 39, SBE 56 and ADCP
+  on the wire was used to BUILD that product -- their pressure fixes the
+  depth interpolation, their conductivity is the source of S, the ADCPs are
+  the source of u and v -- but none of them is a separate level you can fit
+  to. So the 34 levels in section 3 are the vertical resolution available to
+  the mode fit, not the 45 instruments in this list.
+
+------------------------------------------------------------------------------
+ 5.  AS-DEPLOYED WIRE TABLE
+------------------------------------------------------------------------------
+
+  Depth [m] is the deployment-sheet target. Compare with z_obs in
+  section 3, which is what the pressure sensors actually recorded.
+
+    section        type        SN       on wire   depth
+    --------------------------------------------------------
+    800m top       RBR         72106    10        83
+    Chipod         1116        20       93
+    RBR            72107       30       103
+    RBR            72108       40       113
+    RBR            72109       50       123
+    SBE39          5874        60       133
+    RBR            72110       70       143
+    RBR            72111       80       153
+    RBR            72112       90       163
+    RBR            72113       100      173
+    SBE39          5875        110      183
+    RBR            72114       120      193
+    RBR            72115       130      203
+    RBR            72116       140      213
+    RBR            72117       150      223
+    SBE39          5867        160      233
+    RBR            72118       170      243
+    RBR            72119       180      253
+    Chipod         603         190      263
+    SBE37          7816        200      273
+    RBR            72120       210      283
+    RBR            72121       220      293
+    SBE39          3071        240      313
+    RBR            72122       260      333
+    RBR            72123       280      353
+    RBR            72143       300      373
+    RBR            72125       350      423
+    RBR            72126       400      473
+    SBE39          3074        450      523
+    RBR            72127       500      573
+    SBE39          665         550      623
+    RBR            72128       600      673
+    RBR            72129       650      723
+    RBR            72154       700      773
+    RBR            72155       740      813
+    RBR            72156       750      823
+    RBR            72157       760      833
+    RBR            72139       770      843
+    RBR            72134       780      853
+    RBR            76286       790      863
+
+------------------------------------------------------------------------------
+ 6.  NOTES AND OPEN QUESTIONS
+------------------------------------------------------------------------------
+
+  KNOCKDOWN IS THE LARGEST IN THE ARRAY: per-sensor depth range median 164.6
+  m and maximum 195.6 m, in 880 m of water. That is 22% of the water column.
+  The array also settles about 25 m deeper around the same time the ADCP
+  fails.
+
+  MEAN OBSERVED DEPTHS RUN 10 to 19 m SHALLOWER THAN NOMINAL, growing with
+  depth. The nominal depths in section 4 carry a .6 m offset from the
+  deployment sheet; the observed column in section 3 is the one to plot
+  against.
+
+  SALINITY SPIKES ARE WHY THE T/S GATES EXIST. F4's gridded product carries
+  salinity from -114 to +489 psu at the top five sensors, and a negative S
+  makes sw_pden return a COMPLEX sigma that travels silently all the way into
+  the interp1 inside f2_eta. Sensors below about 110 m never leave [34.38
+  35.07], so the [33 36] window only bites at the top and costs 257 of 1.46
+  million samples (0.018%).
+
+------------------------------------------------------------------------------
+ 7.  PROVENANCE
+------------------------------------------------------------------------------
+
+  T, S and z from Anna Simpson; u and v from Conrad Luecke. Section 3 is
+  measured from F4_fullfield.mat and is reproducible; sections 4 and 5 are
+  transcribed from the deployment sheet and are not. The original,
+  unformatted version of this file is kept verbatim at
+  original_info/f4_info.txt.
+
+==============================================================================
+ Reformatted 2026-10-29. Sections 1-3 are measured from the data; 4-5 are
+ transcribed; 6 is interpretation. Original kept at original_info/.
+==============================================================================

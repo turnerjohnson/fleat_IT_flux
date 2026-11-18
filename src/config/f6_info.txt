@@ -1,0 +1,206 @@
+==============================================================================
+ FLEAT MOORING F6  --  INSTRUMENTS, NOMINAL DEPTHS AND RECORD
+==============================================================================
+
+ Position         008 28.962' N, 134 38.575' E    (8.4827 N, 134.6429 E)
+ Setting          shallowest mooring, on the Velasco Reef flank
+ Bottom depth     434 m
+ Instrumented     137 to 420 m   (8 levels in the gridded product)
+ Time grid        2016-06-05 to 2017-04-13   (45072 samples at 10 min,
+                  7512 hourly)
+ Deployment       2016-06-23 to 2017-04-12   (294 days of pressure)
+ Velocity         2016-06-23 to 2017-04-12   (294 days, any sensor)
+ Config window    whole record (cfg.t_end not set)
+ Knockdown        depth range per sensor: median 33 m, max 40 m
+
+------------------------------------------------------------------------------
+ 1.  RECORD AND DURATION, BY CHANNEL
+------------------------------------------------------------------------------
+
+  Common 10-minute time grid: 2016-06-05 to 2017-04-13, 45072 samples.
+  Coverage below is a fraction of that grid, so a mooring deployed late
+  cannot reach 100%.
+
+  ALL  = window in which EVERY sensor reports. ANY = window in which at
+  least one does. The two differ exactly where something failed.
+
+          coverage %, by sensor      ALL sensors         ANY sensor
+    chan   min    med    max   n=0   (YY-MM-DD)          (YY-MM-DD)
+    ----------------------------------------------------------------------
+    depth  93.8   93.8   93.8    0   16-06-23..17-04-12  16-06-23..17-04-12
+    T      93.9   94.1   94.1    0   16-06-23..17-04-12  16-06-22..17-04-12
+    S       0.0   93.8   93.8    1   16-06-23..17-04-12  16-06-23..17-04-12
+    u       0.0   93.8   93.8    1   16-06-23..17-04-12  16-06-23..17-04-12
+    v       0.0   93.8   93.8    1   16-06-23..17-04-12  16-06-23..17-04-12
+
+------------------------------------------------------------------------------
+ 2.  INSTRUMENT FAILURES
+------------------------------------------------------------------------------
+
+  NO FAILURES. All eight rows return 93.8% coverage, and the missing 6% is
+  the pre-deployment lead-in in the common time grid, not a dropout: every
+  channel starts on 2016-06-23 and runs to 2017-04-12 without a gap. The
+  deployment is 18 days shorter at the front than the rest of the array
+  because F6 went in last, so its record is 293 days, not 313.
+
+  The one hole is sensor 8 (RBR 72141, 419 m): no salinity and no velocity.
+  It hangs on the releases below the deepest ADCP bin.
+
+  THE REAL PROBLEM AT F6 IS NOT FAILURE, IT IS RESOLUTION. The mooring
+  carried 19 SBE 56 thermistors between 131 and 405 m, and NONE of them are
+  in the gridded product -- it has 8 rows where the wire had 31 instruments.
+  Over 434 m of water, 8 levels is a thin basis for six vertical modes.
+  Either the SBE 56 records exist and have not been gridded, or they were
+  lost; the archived original of this file lists them all, so the question is
+  answerable.
+
+------------------------------------------------------------------------------
+ 3.  GRIDDED SENSOR TABLE  (measured from F6_fullfield.mat)
+------------------------------------------------------------------------------
+
+  z_nom  is the deployment-sheet depth for that serial number (section 4).
+  z_obs  is the mean of the recorded pressure-derived depth.
+  Coverage is percent of the common grid. 'ends' is the last good
+  sample of u; a date earlier than the record end is a failure.
+
+    #  type       SN      z_nom  z_obs    dz    T%    S%    u%  u ends
+    ----------------------------------------------------------------------
+     1 RBR Solo   100161   141.0  137.1  -3.9  94.1  93.8  93.8  2017-04-12
+     2 RBR Solo   100156   181.0  177.1  -3.9  94.1  93.8  93.8  2017-04-12
+     3 RBR Solo   77564    227.0  217.1  -9.9  94.1  93.8  93.8  2017-04-12
+     4 RBR Solo   100158   267.0  257.0 -10.0  94.1  93.8  93.8  2017-04-12
+     5 RBR Solo   100157   307.0  296.8 -10.2  94.1  93.8  93.8  2017-04-12
+     6 RBR Solo   77561    345.0  336.8  -8.2  94.1  93.8  93.8  2017-04-12
+     7 RBR Solo   77570    385.0  376.8  -8.2  94.1  93.8  93.8  2017-04-12
+     8 RBR Solo   72141    422.0  419.5  -2.5  93.9   0.0   0.0  --
+
+------------------------------------------------------------------------------
+ 4.  AS-DEPLOYED INSTRUMENT LIST  (deployment sheet)
+------------------------------------------------------------------------------
+
+  All 35 instruments logged on the deployment sheet, by type and nominal
+  depth. 'grid' marks the 9 that appear as rows in the gridded product;
+  'dead' marks those the original file flagged as not recording.
+
+    type        SN       z_nom   status   ('-' = no fixed depth)
+    --------------------------------------------------------
+    RBR Solo    100161    141.0   grid  [SN listed twice on the sheet]
+    RBR Solo    100156    181.0   grid
+    RBR Solo    77564     227.0   grid
+    RBR Solo    100158    267.0   grid
+    RBR Solo    100157    307.0   grid
+    RBR Solo    77561     345.0   grid
+    RBR Solo    77570     385.0   grid
+    RBR Solo    72141     422.0   grid
+    RDI ADCP    1602      119.0   not in gridded product
+    RDI ADCP    15339     121.0   not in gridded product
+    RDI ADCP    22479     413.0   not in gridded product
+    SBE 37      7775      123.0   not in gridded product
+    SBE 37      12707     217.0   not in gridded product
+    SBE 37      12708     315.0   not in gridded product
+    SBE 37      7778      413.0   not in gridded product
+    SBE 56      425       131.0   not in gridded product
+    SBE 56      6413      151.0   not in gridded product
+    SBE 56      6414      161.0   not in gridded product
+    SBE 56      6415      171.0   not in gridded product
+    SBE 56      6416      191.0   not in gridded product
+    SBE 56      6417      201.0   not in gridded product
+    SBE 56      6418      237.0   not in gridded product
+    SBE 56      6419      247.0   not in gridded product
+    SBE 56      6420      257.0   not in gridded product
+    SBE 56      6421      277.0   not in gridded product
+    SBE 56      6422      287.0   not in gridded product
+    SBE 56      6423      297.0   not in gridded product
+    SBE 56      421       325.0   not in gridded product
+    SBE 56      6425      335.0   not in gridded product
+    SBE 56      6426      355.0   not in gridded product
+    SBE 56      6427      365.0   not in gridded product
+    SBE 56      6428      375.0   not in gridded product
+    SBE 56      6429      395.0   not in gridded product
+    SBE 56      6430      405.0   not in gridded product
+
+  SERIAL NUMBER LISTED MORE THAN ONCE: 100161. The depth shown is off the
+  first entry that was not flagged dead; the other entry is in the archived
+  original. Check the sheet before trusting either.
+
+  THE GRIDDED PRODUCT IS NOT THE MOORING. Only the RBR Solos and the Chi-PODs
+  appear as rows in F6_fullfield.mat. Every SBE 37, SBE 39, SBE 56 and ADCP
+  on the wire was used to BUILD that product -- their pressure fixes the
+  depth interpolation, their conductivity is the source of S, the ADCPs are
+  the source of u and v -- but none of them is a separate level you can fit
+  to. So the 8 levels in section 3 are the vertical resolution available to
+  the mode fit, not the 35 instruments in this list.
+
+------------------------------------------------------------------------------
+ 5.  AS-DEPLOYED WIRE TABLE
+------------------------------------------------------------------------------
+
+  Depth [m] is the deployment-sheet target. Compare with z_obs in
+  section 3, which is what the pressure sensors actually recorded.
+
+    section        type        SN       on wire   depth
+    --------------------------------------------------------
+    sbe56          425         280      295
+    rbr solo       100161      270      285
+    sbe56          6413        260      275
+    sbe56          6414        250      265
+    sbe56          6415        240      255
+    rbr solo       100156      230      245
+    sbe56          6416        220      235
+    sbe56          6417        210      225
+    SBE37          12707       200      215
+    rbr solo       77564       190      205
+    sbe56          6418        180      195
+    sbe56          6419        170      185
+    sbe56          6420        160      175
+    rbr solo       100158      150      165
+    sbe56          6421        140      155
+    sbe56          6422        130      145
+    sbe56          6423        120      135
+    rbr solo       100157      110      125
+    SBE37          12708       100      115
+    sbe56          421         90       105
+    sbe56          6425        80       95
+    rbr solo       77561       70       85
+    sbe56          6426        60       75
+    sbe56          6427        50       65
+    sbe56          6428        40       55
+    rbr solo       77570       30       45
+    sbe56          6429        20       35
+    sbe56          6430        10       25
+                   RBR solo    72141    on releases
+                   SBE37       7775     top float
+                   SBE37       7778     deepest adcp
+
+------------------------------------------------------------------------------
+ 6.  NOTES AND OPEN QUESTIONS
+------------------------------------------------------------------------------
+
+  F6 SITS ON A SLOPE THE BATHYMETRY GRID CANNOT RESOLVE. Within two
+  kilometres the grid runs from 15 m to 1578 m at about 500 m spacing; the
+  nearest cell reads 185 m and the 434 m isobath falls between cells. The 434
+  m in this file is off the deployment sheet and is the number to use. Do not
+  "correct" it against the grid -- fleat_moorings tests over a patch rather
+  than a point precisely because of this mooring.
+
+  The same steepness is why F6 is interesting and why it is hard: 434 m of
+  water on a reef flank is a plausible generation site, and flat-bottom
+  vertical modes are at their least defensible there.
+
+  KNOCKDOWN IS THE SMALLEST IN THE ARRAY: per-sensor depth range median 32.7
+  m, max 39.5 m. Mean observed depths run 2 to 10 m shallower than nominal.
+
+------------------------------------------------------------------------------
+ 7.  PROVENANCE
+------------------------------------------------------------------------------
+
+  T, S and z from Anna Simpson; u and v from Conrad Luecke. Section 3 is
+  measured from F6_fullfield.mat and is reproducible; sections 4 and 5 are
+  transcribed from the deployment sheet and are not. The original,
+  unformatted version of this file is kept verbatim at
+  original_info/f6_info.txt.
+
+==============================================================================
+ Reformatted 2026-10-29. Sections 1-3 are measured from the data; 4-5 are
+ transcribed; 6 is interpretation. Original kept at original_info/.
+==============================================================================
